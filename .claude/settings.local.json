@@ -9,7 +9,13 @@
       "Skill(speckit-git-feature:*)",
       "Bash(powershell -ExecutionPolicy Bypass -File \".specify/extensions/git/scripts/powershell/create-new-feature.ps1\" -Json -ShortName \"currency-converter\" \"Create a module for storing and converting currencies with daily exchange rate updates from freecurrencyapi.com\")",
       "Bash(git check-ignore *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File .specify/scripts/powershell/setup-plan.ps1 -Json)",
+      "mcp__laravel-boost__database-schema",
+      "mcp__laravel-boost__search-docs",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File .specify/extensions/git/scripts/powershell/auto-commit.ps1 after_plan)",
+      "Bash(git commit *)",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File .specify/scripts/powershell/setup-tasks.ps1 -Json)"
     ]
   }
 }
