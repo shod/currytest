@@ -170,6 +170,15 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 </laravel-boost-guidelines>
 
 <!-- SPECKIT START -->
-For additional context about technologies to be used, project structure,
-shell commands, and other important information, read the current plan
+Active feature: **001-currency-converter** (Currency Storage and Conversion Module).
+
+For technologies, project structure, shell commands, constitution gates, and the per-phase
+artifacts, read the current plan and its companions:
+
+- [specs/001-currency-converter/plan.md](specs/001-currency-converter/plan.md)
+- [specs/001-currency-converter/spec.md](specs/001-currency-converter/spec.md)
+- [specs/001-currency-converter/research.md](specs/001-currency-converter/research.md)
+- [specs/001-currency-converter/data-model.md](specs/001-currency-converter/data-model.md)
+- [specs/001-currency-converter/contracts/](specs/001-currency-converter/contracts/)
+- [specs/001-currency-converter/quickstart.md](specs/001-currency-converter/quickstart.md)
 <!-- SPECKIT END -->
