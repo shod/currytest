@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(speckit-git-initialize)",
+      "Skill(speckit-git-initialize:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File .specify\\\\extensions\\\\git\\\\scripts\\\\powershell\\\\initialize-repo.ps1)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \".specify/extensions/git/scripts/powershell/initialize-repo.ps1\")",
+      "Skill(speckit-git-feature)",
+      "Skill(speckit-git-feature:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \".specify/extensions/git/scripts/powershell/create-new-feature.ps1\" -Json -ShortName \"currency-converter\" \"Create a module for storing and converting currencies with daily exchange rate updates from freecurrencyapi.com\")",
+      "Bash(git check-ignore *)",
+      "Bash(git add *)"
+    ]
+  }
+}
