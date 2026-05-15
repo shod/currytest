@@ -21,6 +21,16 @@
 6. A **seed admin user** MUST be created with default credentials `admin` / `Aqaz`. These are **MVP defaults only** and MUST be overridable through environment configuration; production deployments MUST change them before the application is exposed beyond local development.
 7. Admin panel pages MUST be rendered with **Blade** (the framework's native server-side templating). No SPA / JS-framework dependency is introduced.
 
+## Clarifications
+
+### Session 2026-05-15
+
+- Q: How should the conversion service handle negative amounts? → A: Reject negatives with a clear validation error; zero returns zero.
+- Q: Where is the supported-currency list managed (source of truth)? → A: In the database, populated by a seeder; admin page is read-only; changes require a new seed/migration.
+- Q: How should the conversion service treat currency-code casing and surrounding whitespace? → A: Normalise input — trim whitespace and uppercase before lookup; unknown codes still hit the unsupported-currency error.
+- Q: What rounding/precision strategy should the conversion service apply? → A: Compute with `bcmath` at scale 10; round the final result to 2 decimal places, half-up; store rates as DECIMAL(20,10).
+- Q: How should the daily refresh react to a same-run failure from the external provider? → A: Retry up to 2 additional times within the same scheduled run, with exponential backoff (≈30s then ≈5m); then stop and rely on the next daily run.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Convert a price between two currencies (Priority: P1)
@@ -49,10 +59,10 @@ precision tolerance.
 3. **Given** a requested currency code is not present in the stored list of supported currencies,
    **When** a caller requests conversion involving that code, **Then** the service rejects the
    request with a clear, actionable error indicating the unsupported currency.
-4. **Given** a requested amount is negative or zero, **When** a caller requests conversion,
-   **Then** the service handles the value according to a documented rule (zero returns zero;
-   negative values are either rejected with a clear error or converted preserving sign — the
-   chosen behaviour is documented and consistently applied).
+4. **Given** a requested amount is zero, **When** a caller requests conversion, **Then** the
+   service returns zero in the target currency.
+5. **Given** a requested amount is negative, **When** a caller requests conversion, **Then** the
+   service rejects the request with a clear validation error and performs no conversion.
 
 ---
 
@@ -149,12 +159,14 @@ metadata (ISO code, human-readable name, enabled flag).
 - **External API failure**: Provider returns HTTP errors, timeouts, malformed JSON, or rate
   payloads missing certain currencies. The system must not corrupt existing stored rates.
 - **Provider rate-limit / quota exceeded**: The system must record the failure, surface it for
-  operations, and not retry aggressively in a way that worsens the situation.
+  operations, and respect the bounded retry policy in FR-009 (at most 2 retries per run, with
+  exponential backoff) so that the rate-limit condition is not worsened.
 - **Clock drift / time zone mismatch**: "Once per day" must be interpreted against a clearly
   defined time zone (system default) so that refresh cadence is predictable.
 - **Currency code casing and validation**: Convert is invoked with lower-case, mixed-case, or
-  whitespace-padded ISO codes. The service must either normalise input or reject it with a clear
-  error consistently.
+  whitespace-padded ISO codes. The service trims surrounding whitespace and uppercases the input
+  before lookup; codes that do not match any supported currency after normalisation are rejected
+  per FR-007.
 - **Conversion through base currency**: When the provider only returns rates relative to a base
   currency (e.g. USD), conversions between two non-base currencies must be computed via the base
   with documented precision rules.
@@ -186,9 +198,11 @@ metadata (ISO code, human-readable name, enabled flag).
 
 ### Functional Requirements
 
-- **FR-001**: The system MUST maintain a predefined list of supported currencies. The list MAY be
-  hardcoded in the module or managed through the admin panel; whichever option is chosen MUST be
-  documented and consistent.
+- **FR-001**: The system MUST maintain a predefined list of supported currencies persisted in the
+  application database. The list MUST be populated by a database seeder (delivered via the
+  framework's standard seeding mechanism). The admin panel **Available Currencies** page is
+  read-only: changing the supported currency list requires updating the seeder and re-running it
+  (or a follow-up migration), not editing through the UI.
 - **FR-002**: The system MUST persist exchange rates for every supported currency in the
   application database, together with metadata identifying the source currency, target currency,
   rate value, and the timestamp of the most recent refresh.
@@ -205,11 +219,17 @@ metadata (ISO code, human-readable name, enabled flag).
   and target currency codes are equal.
 - **FR-007**: The conversion service MUST reject requests involving unsupported currency codes
   with a clear, actionable error.
-- **FR-008**: The system MUST apply a documented, consistent rounding/precision strategy to
-  monetary conversion results so that callers receive predictable values.
+- **FR-008**: The system MUST compute conversion arithmetic with `bcmath` at scale 10 (no native
+  float arithmetic), round the final result to 2 decimal places using half-up rounding, and
+  return the rounded value to the caller. Stored exchange rates MUST use a fixed-precision
+  decimal column (DECIMAL(20,10) or equivalent) so that values round-trip through the database
+  without precision loss.
 - **FR-009**: When the external rate provider fails, the system MUST preserve previously stored
-  rates, log the failure with sufficient diagnostic context, and arrange for the next scheduled
-  attempt to recover automatically.
+  rates, log the failure with sufficient diagnostic context, retry up to 2 additional times
+  within the same scheduled run using exponential backoff (approximately 30 seconds before the
+  first retry and 5 minutes before the second), and — if all attempts in the run fail — stop
+  retrying until the next daily scheduled run. Each attempt (success or failure) MUST produce a
+  Refresh Job Log entry.
 - **FR-010**: The system MUST provide a **Currency Rates** page in the admin panel that lists
   every stored exchange rate together with its metadata (source currency, target currency, value,
   last refresh timestamp).
@@ -254,6 +274,12 @@ metadata (ISO code, human-readable name, enabled flag).
   and/or visible banner on the admin panel) whenever the seeded admin user still has the
   documented MVP default password while running in any non-`local` / non-development
   environment.
+- **FR-023**: The conversion service MUST reject negative amounts with a clear validation
+  error and MUST return zero unchanged when the amount is exactly zero.
+- **FR-024**: The conversion service MUST normalise incoming currency codes by trimming
+  surrounding whitespace and converting the value to upper case before looking up the supported
+  currency. The original caller input MAY appear unchanged in error messages, but matching and
+  storage MUST use the normalised form.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -312,15 +338,16 @@ metadata (ISO code, human-readable name, enabled flag).
 ## Assumptions
 
 - **Supported currency list**: A reasonable default starter set (e.g. USD, EUR, RUB, GBP, plus a
-  handful of widely used currencies) is acceptable for the initial release. Maintaining the list
-  via configuration (hardcoded constants or seed data) is acceptable; an admin-managed UI for the
-  list itself is out of scope unless explicitly requested.
+  handful of widely used currencies) is acceptable for the initial release. Per FR-001 the list
+  lives in the database and is populated by a seeder; the admin **Available Currencies** page is
+  read-only. An admin-managed CRUD UI for the list itself is out of scope.
 - **Time zone for daily refresh**: The "once per day" cadence is interpreted against the
   application's configured default time zone; no per-user or per-tenant scheduling is required.
 - **Base currency**: freecurrencyapi.com exposes rates relative to a base currency (typically
   USD). Conversions between two non-base currencies are computed by chaining through that base
-  using stored rates; precision tolerances are documented when the conversion service is
-  implemented.
+  using stored rates. Per FR-008, all intermediate arithmetic uses `bcmath` at scale 10 and only
+  the final returned value is rounded (2 decimal places, half-up), so chained conversions do not
+  accumulate float drift.
 - **Admin panel**: An admin panel already exists (or is being introduced as part of the broader
   project). This feature contributes two new pages to it (**Currency Rates** and **Available
   Currencies**) and reuses the existing authentication and authorisation mechanisms; building a
