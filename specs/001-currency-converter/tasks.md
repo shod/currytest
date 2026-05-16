@@ -36,7 +36,7 @@ project-relative throughout.
 
 **Purpose**: Toolchain and configuration prerequisites that every later phase relies on.
 
-- [ ] T001 Obtain user approval and add `larastan/larastan` dev dependency to satisfy Constitution Principle VI; run `composer require --dev larastan/larastan` and add `phpstan.neon` at repo root with `level: 6` and `paths: [app]`
+- [X] T001 Obtain user approval and add `larastan/larastan` dev dependency to satisfy Constitution Principle VI; run `composer require --dev larastan/larastan` and add `phpstan.neon` at repo root with `level: 6` and `paths: [app]`
 - [X] T002 [P] Create `config/currency.php` exposing `freecurrencyapi.api_key`, `freecurrencyapi.base_url`, `freecurrencyapi.base_currency`, `freecurrencyapi.timeout_seconds`, `admin.username`, `admin.password` — read via `env()` ONLY in this file (FR-013)
 - [X] T003 [P] Update `.env.example` with `FREECURRENCYAPI_KEY=`, `FREECURRENCYAPI_BASE_CURRENCY=USD`, `FREECURRENCYAPI_TIMEOUT=10`, `ADMIN_USERNAME=admin`, `ADMIN_PASSWORD=Aqaz`
 
@@ -230,12 +230,12 @@ enabled indicator. Empty currencies → empty-state message. Anonymous → 302. 
 **Purpose**: Suite-wide validation and Constitution gates before merge.
 
 - [X] T062 [P] Run full PHPUnit suite: `php artisan test --compact` — entire feature green plus the existing skeleton `ExampleTest`s
-- [ ] T063 [P] Run `vendor/bin/phpstan analyse --memory-limit=512M` (LaraStan at level 6 from T001 / `phpstan.neon`); fix any reported issues without lowering the level — blocked on T001 approval
+- [X] T063 [P] Run `vendor/bin/phpstan analyse --memory-limit=512M` (LaraStan at level 6 from T001 / `phpstan.neon`); fix any reported issues without lowering the level — blocked on T001 approval
 - [X] T064 [P] Run `vendor/bin/pint --dirty --format agent` and confirm no formatting drift
 - [X] T065 Verify SC-007 via `git grep -F "$FREECURRENCYAPI_KEY"` (or `git grep` against the real key in your `.env`) returns zero matches in tracked files
-- [ ] T066 Walk through [quickstart.md](quickstart.md) end-to-end on a clean clone: setup → migrate → seed → `php artisan currency:convert 100 USD RUB` → admin login → both admin pages render
-- [ ] T067 Write PR description citing the specific freecurrencyapi.com documentation sections used (Principle VII): endpoint path, query parameters, auth placement, response shape, error envelope, rate-limit headers
-- [ ] T068 Open the PR with the title `feat(001-currency-converter): currency storage and conversion module` and link to [spec.md](spec.md), [plan.md](plan.md), and [tasks.md](tasks.md) in the body
+- [X] T066 Walk through [quickstart.md](quickstart.md) end-to-end on a clean clone: setup → migrate → seed → `php artisan currency:convert 100 USD RUB` → admin login → both admin pages render
+- [X] T067 Write PR description citing the specific freecurrencyapi.com documentation sections used (Principle VII): endpoint path, query parameters, auth placement, response shape, error envelope, rate-limit headers
+- [X] T068 Open the PR with the title `feat(001-currency-converter): currency storage and conversion module` and link to [spec.md](spec.md), [plan.md](plan.md), and [tasks.md](tasks.md) in the body
 
 ---
 

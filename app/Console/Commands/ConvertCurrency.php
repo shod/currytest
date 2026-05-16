@@ -33,11 +33,11 @@ class ConvertCurrency extends Command
         try {
             $result = $this->converter->convert($amount, $from, $to);
         } catch (InvalidConversionAmountException $e) {
-            $this->getOutput()->getErrorOutput()->writeln('error: '.$e->getMessage());
+            fwrite(STDERR, 'error: '.$e->getMessage().PHP_EOL);
 
             return 1;
         } catch (UnsupportedCurrencyException|MissingExchangeRateException $e) {
-            $this->getOutput()->getErrorOutput()->writeln('error: '.$e->getMessage());
+            fwrite(STDERR, 'error: '.$e->getMessage().PHP_EOL);
 
             return 2;
         }
