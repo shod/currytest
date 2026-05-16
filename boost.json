@@ -9,6 +9,7 @@
     "nightwatch": false,
     "sail": false,
     "skills": [
-        "laravel-best-practices"
+        "laravel-best-practices",
+        "tailwindcss-development"
     ]
 }

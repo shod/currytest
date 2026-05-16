@@ -115,3 +115,22 @@ into directory spec/conversation
 - Feature spec at [specs/001-currency-converter/spec.md](../../specs/001-currency-converter/spec.md) (4 user stories, 22 functional requirements, 10 success criteria, 2 rounds of amendments).
 - Requirements checklist at [specs/001-currency-converter/checklists/requirements.md](../../specs/001-currency-converter/checklists/requirements.md).
 - Git: branch `001-currency-converter`, commit `7d8cca5` ("Set up Spec Kit and draft currency-converter feature", 54 files, 7234 insertions).
+
+## Summary
+Constitution Amended: v1.0.0 → v1.1.0 (.specify/memory/constitution.md)
+
+Bump rationale
+MINOR: a new principle was added (Principle VII), Principle IV got a cross-reference to it, and Principle VI (added post-ratification by the linter) is now formally rolled into the versioned constitution. No backward-incompatible changes — all existing rules remain in force.
+
+What changed
+Item	Treatment
+1. Use freecurrencyapi.com docs	Folded into Principle VII as part of the "External HTTP APIs — vendor docs" rule (vendor URL cited verbatim)
+2. Use Laravel Boost	Principle IV strengthened with explicit cross-reference to VII; Boost is named as the primary doc source for Laravel-ecosystem packages
+3. Use MCP context7 if needed	Folded into Principle VII as the "Non-Laravel libraries — MCP context7" rule (used when Boost can't supply the doc)
+Principle VII at a glance
+Documentation-First Integration — before integrating with any external service, Laravel/PHP package, or non-trivial framework feature, consult its authoritative documentation. Three documentation lanes:
+
+Laravel ecosystem → Boost search-docs
+Non-Laravel libraries → MCP context7
+External HTTP APIs → vendor docs (e.g. https://freecurrencyapi.com/docs)
+Plus two safety rules: verification over inference (docs override prior assumptions) and no invented identifiers (stop and surface gaps rather than guess endpoints, params, class names, or config keys).
