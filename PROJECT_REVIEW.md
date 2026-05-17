@@ -107,6 +107,19 @@ admin не сменён в не-`local` окружении (FR-022).
 
 ---
 
+## Скриншоты admin panel
+
+В папке [`public/example-screenshots/`](public/example-screenshots/) находятся скриншоты страниц
+административной панели:
+
+| Файл | Страница |
+|---|---|
+| [login.png](public/example-screenshots/login.png) | Форма входа `/admin/login` |
+| [currencies.png](public/example-screenshots/currencies.png) | Список валют `/admin/currencies` |
+| [rates.png](public/example-screenshots/rates.png) | Таблица курсов `/admin/rates` |
+
+---
+
 ## Структура документации
 
 ```
